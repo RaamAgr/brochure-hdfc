@@ -16,7 +16,7 @@ with st.sidebar:
     
     st.divider()
     
-    # === NEW FEATURE: DEBUG TOGGLE ===
+    # === FEATURE: DEBUG TOGGLE ===
     # If True: Show steps one by one. If False: Run everything at once.
     debug_mode = st.toggle("Debug / Manual Mode", value=True)
     
@@ -42,7 +42,7 @@ def init_gemini(api_key, file_obj):
     try:
         genai.configure(api_key=api_key)
         
-        # 1. SAFETY SETTINGS (Keep these to allow "rebuttal" arguments)
+        # 1. SAFETY SETTINGS
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -50,10 +50,9 @@ def init_gemini(api_key, file_obj):
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
         ]
 
-        # 2. GENERATION CONFIG (Temp=0 + Thinking)
-        # Gemini 3 Pro defaults to "High" thinking, but we set temp=0 as requested.
+        # 2. GENERATION CONFIG
         generation_config = genai.types.GenerationConfig(
-            temperature=0.3, # Deterministic output
+            temperature=0.3, 
             candidate_count=1
         )
 
@@ -63,7 +62,7 @@ def init_gemini(api_key, file_obj):
             generation_config=generation_config
         ) 
         
-        # Standard File Upload Logic...
+        # Standard File Upload Logic
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_obj.getvalue())
             tmp_path = tmp.name
@@ -118,23 +117,23 @@ The goal is a complete, auditable raw information dump suitable for later rebutt
 default_p2 = """From the provided brochure text, generate customer facing questions suitable for rebuttal, retention, and grievance handling.
 
 Internally ensure the questions cover ALL of the following categories (do not label categories in output):
-	1.	General understanding and informative questions
-• overall plan purpose
-• who the plan is for
-• how the plan helps in the long term
-	2.	Customer doubts and confusion after purchase
-• misunderstanding of benefits
-• expectations versus reality
-	3.	Policy status and continuation scenarios
-• lapsed, paid up, discontinued situations
-• impact of stopping premiums
-	4.	Regret, sunk cost, and continuation dilemma
-• customer has already paid for some time
-• what is lost if the policy is stopped now
-• whether continuing still makes sense
-	5.	Dissatisfaction and trust concerns
-• miss selling perception
-• unhappiness or loss of confidence
+    1. General understanding and informative questions
+        • overall plan purpose
+        • who the plan is for
+        • how the plan helps in the long term
+    2. Customer doubts and confusion after purchase
+        • misunderstanding of benefits
+        • expectations versus reality
+    3. Policy status and continuation scenarios
+        • lapsed, paid up, discontinued situations
+        • impact of stopping premiums
+    4. Regret, sunk cost, and continuation dilemma
+        • customer has already paid for some time
+        • what is lost if the policy is stopped now
+        • whether continuing still makes sense
+    5. Dissatisfaction and trust concerns
+        • miss selling perception
+        • unhappiness or loss of confidence
 
 STRICTLY EXCLUDE:
 • illustration based or example based questions
@@ -158,7 +157,7 @@ default_p3 = """Using only the brochure content provided, answer each question b
 
 Follow these rules strictly:
 
-• Repeat the question exactly as written, including the *  at the beginning and  * at the end
+• Repeat the question exactly as written, including the * at the beginning and  * at the end
 • Write the answer immediately below the question
 • Write as if you are speaking directly to the customer, not referring to documents
 • Never mention the brochure, policy document, or terms text explicitly
@@ -174,17 +173,12 @@ Follow these rules strictly:
 
 If a question cannot be fully answered using the brochure alone, provide reassurance first, then gently suggest reaching customer support for personalised help.
 
-
- FORMATTING RULES:
-        - DEFAULT FORMAT (Q&A):
-           Q: {{Question/Heading}}
-           A: {{answer}}
-           Separator: '###'
-
-
+FORMATTING RULES:
+- DEFAULT FORMAT (Q&A):
+    Q: {{Question/Heading}}
+    A: {{answer}}
+    Separator: '###'
 """
-
-
 
 # ==========================================
 #  MODE 1: AUTOMATIC (DEBUG OFF)
@@ -235,11 +229,11 @@ if not debug_mode:
         st.subheader("Final Output")
         st.write(st.session_state.step3_result)
         st.download_button(
-  		  label="Download Report", 
-  		  data=st.session_state.step3_result, 
-   		  file_name="report.txt", 
- 	      mime="text/plain"
-)
+            label="Download Report", 
+            data=st.session_state.step3_result, 
+            file_name="report.txt", 
+            mime="text/plain"
+        )
 
 # ==========================================
 # MODE 2: DEBUG / MANUAL (DEBUG ON)
@@ -307,3 +301,10 @@ else:
     if st.session_state.step3_result:
         st.success("Done!")
         st.write(st.session_state.step3_result)
+        # FIX: Added Download button to manual mode as well
+        st.download_button(
+            label="Download Report", 
+            data=st.session_state.step3_result, 
+            file_name="report.txt", 
+            mime="text/plain"
+        )
