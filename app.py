@@ -44,7 +44,7 @@ def init_gemini(api_key, file_obj):
         
         # FIX: Using a stable model ID. 
         # If you have access to Gemini 3, use "gemini-3-pro-preview"
-        model = genai.GenerativeModel("gemini-1.5-pro") 
+        model = genai.GenerativeModel("gemini-3-pro-preview") 
         
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_obj.getvalue())
