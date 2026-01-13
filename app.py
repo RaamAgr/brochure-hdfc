@@ -234,7 +234,12 @@ if not debug_mode:
     if st.session_state.step3_result:
         st.subheader("Final Output")
         st.write(st.session_state.step3_result)
-        st.download_button("Download Report", st.session_state.step3_result, "report.html")
+        st.download_button(
+  		  label="Download Report", 
+  		  data=st.session_state.step3_result, 
+   		  file_name="report.txt", 
+ 	      mime="text/plain"
+)
 
 # ==========================================
 # MODE 2: DEBUG / MANUAL (DEBUG ON)
