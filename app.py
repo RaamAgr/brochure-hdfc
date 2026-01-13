@@ -3,65 +3,148 @@ import google.generativeai as genai
 import tempfile
 import os
 
-st.set_page_config(page_title="Gemini 3 PDF Chain", layout="wide")
+# --- Page Config ---
+st.set_page_config(page_title="Gemini 3 Pro | Step-by-Step Chain", layout="wide")
 
-# --- UI Header ---
-st.title("🔗 Gemini 3 Pro PDF Chain")
-st.info("Step-by-step processing: PDF -> Prompt 1 -> Prompt 2 -> Prompt 3")
+st.title("🔗 Gemini 3 Pro: Step-by-Step Chain")
+st.markdown("""
+**Workflow:**
+1. Upload PDF → Run Step 1 (Analysis)
+2. Review Output 1 → Run Step 2 (Risk Assessment)
+3. Review Output 2 → Run Step 3 (Final Report)
+""")
 
-# --- Configuration ---
+# --- Sidebar: Setup ---
 with st.sidebar:
+    st.header("Settings")
     api_key = st.text_input("Gemini API Key", type="password")
     uploaded_file = st.file_uploader("Upload PDF", type=["pdf"])
+    
+    # Reset button to clear state and start over
+    if st.button("Reset Chain"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
 
-# --- Step Prompts ---
-p1 = st.text_area("Step 1: Initial Prompt", "Extract the executive summary and key metrics.")
-p2 = st.text_area("Step 2: Analysis Prompt", "Based on those metrics, provide a SWOT analysis.")
-p3 = st.text_area("Step 3: Final Refinement", "Write a 3-bullet executive email based on that SWOT.")
+# --- Session State Initialization ---
+# This "memory" keeps data alive between button clicks
+if "chat_session" not in st.session_state:
+    st.session_state.chat_session = None
+if "step1_result" not in st.session_state:
+    st.session_state.step1_result = None
+if "step2_result" not in st.session_state:
+    st.session_state.step2_result = None
+if "step3_result" not in st.session_state:
+    st.session_state.step3_result = None
 
-if st.button("Start Processing"):
-    if not (api_key and uploaded_file):
-        st.error("Missing API Key or PDF file.")
+# --- Helper: Initialize Chat ---
+def init_gemini(api_key, file_obj):
+    try:
+        genai.configure(api_key=api_key)
+        # Using the latest Gemini 3 model ID
+        model = genai.GenerativeModel("gemini-3-pro-preview") 
+        
+        # Upload file to Gemini
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(file_obj.getvalue())
+            tmp_path = tmp.name
+        
+        with st.spinner("Uploading PDF to Gemini 3 context window..."):
+            uploaded_doc = genai.upload_file(tmp_path)
+            # Wait for processing if necessary (Gemini 3 is usually instant)
+            import time
+            while uploaded_doc.state.name == "PROCESSING":
+                time.sleep(1)
+                uploaded_doc = genai.get_file(uploaded_doc.name)
+                
+        os.remove(tmp_path)
+        
+        # Start chat with the file
+        chat = model.start_chat(history=[
+            {"role": "user", "parts": [uploaded_doc, "Analyze this file."]},
+            {"role": "model", "parts": ["I have analyzed the file. Ready for your prompts."]}
+        ])
+        return chat
+    except Exception as e:
+        st.error(f"Connection Error: {e}")
+        return None
+
+# ==========================================
+# STEP 1: INITIAL ANALYSIS
+# ==========================================
+st.divider()
+st.subheader("Step 1: Initial Extraction")
+
+prompt1 = st.text_area("Prompt 1", value="Summarize the key technical requirements in this document.", height=100)
+
+# Button 1 only runs if we haven't done Step 1 yet, or if we want to re-run it
+if st.button("Run Step 1", type="primary"):
+    if not api_key or not uploaded_file:
+        st.warning("Please provide API Key and File.")
     else:
-        try:
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel("gemini-3-pro") # Using Gemini 3 Pro
+        # Initialize session if needed
+        if st.session_state.chat_session is None:
+            st.session_state.chat_session = init_gemini(api_key, uploaded_file)
+        
+        if st.session_state.chat_session:
+            with st.spinner("Gemini 3 is thinking..."):
+                response = st.session_state.chat_session.send_message(prompt1)
+                st.session_state.step1_result = response.text
+                # Clear future steps if we re-run step 1
+                st.session_state.step2_result = None
+                st.session_state.step3_result = None
 
-            # 1. Upload File to Google Cloud (Gemini 3 handles larger files better)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                tmp.write(uploaded_file.getvalue())
-                tmp_path = tmp.name
+# Display Output 1 if it exists
+if st.session_state.step1_result:
+    st.info("✅ Step 1 Output Generated")
+    st.write(st.session_state.step1_result)
+else:
+    st.stop() # Stop execution here until Step 1 is done
 
-            with st.spinner("Uploading and analyzing PDF..."):
-                doc_file = genai.upload_file(path=tmp_path)
-                # Chat session keeps the state across your 3 steps
-                chat = model.start_chat(history=[])
+# ==========================================
+# STEP 2: REFINEMENT
+# ==========================================
+st.divider()
+st.subheader("Step 2: Risk Analysis")
+st.markdown("*Proceed only after reviewing Step 1.*")
 
-                # STEP 1
-                st.subheader("Step 1 Output")
-                res1 = chat.send_message([doc_file, p1])
-                st.write(res1.text)
+prompt2 = st.text_area("Prompt 2", value="Based on the summary above, list the top 5 high-priority risks.", height=100)
 
-                # STEP 2
-                st.subheader("Step 2 Output")
-                res2 = chat.send_message(p2)
-                st.write(res2.text)
+if st.button("Run Step 2"):
+    with st.spinner("Analyzing risks..."):
+        # The chat session already knows what happened in Step 1
+        response = st.session_state.chat_session.send_message(prompt2)
+        st.session_state.step2_result = response.text
+        st.session_state.step3_result = None
 
-                # STEP 3
-                st.subheader("Step 3 Output")
-                res3 = chat.send_message(p3)
-                st.markdown("---")
-                st.success("Final Result Ready!")
-                st.write(res3.text)
+# Display Output 2 if it exists
+if st.session_state.step2_result:
+    st.info("✅ Step 2 Output Generated")
+    st.write(st.session_state.step2_result)
+else:
+    st.stop()
 
-                # DOWNLOAD
-                st.download_button(
-                    label="Download Result (.txt)",
-                    data=res3.text,
-                    file_name="gemini_3_final_output.txt",
-                    mime="text/plain"
-                )
+# ==========================================
+# STEP 3: FINAL FORMAT
+# ==========================================
+st.divider()
+st.subheader("Step 3: JSON Conversion")
 
-            os.remove(tmp_path) # Cleanup
-        except Exception as e:
-            st.error(f"Error: {e}")
+prompt3 = st.text_area("Prompt 3", value="Convert the risk list into a strict JSON format.", height=100)
+
+if st.button("Run Step 3"):
+    with st.spinner("Formatting..."):
+        response = st.session_state.chat_session.send_message(prompt3)
+        st.session_state.step3_result = response.text
+
+# Display Output 3 if it exists
+if st.session_state.step3_result:
+    st.success("✅ Chain Complete!")
+    st.code(st.session_state.step3_result, language='json')
+    
+    st.download_button(
+        label="Download Final JSON",
+        data=st.session_state.step3_result,
+        file_name="gemini3_output.json",
+        mime="application/json"
+    )
