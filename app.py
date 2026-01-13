@@ -42,9 +42,7 @@ def init_gemini(api_key, file_obj):
     try:
         genai.configure(api_key=api_key)
         
-        # --- SAFETY SETTINGS (CRITICAL FIX) ---
-        # This prevents the ValueError by disabling the harassment/harm block 
-        # that gets triggered by words like "rebuttal" or "grievance".
+        # 1. SAFETY SETTINGS (Keep these to allow "rebuttal" arguments)
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
             {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -52,12 +50,20 @@ def init_gemini(api_key, file_obj):
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
         ]
 
-        # Use the specific preview model ID as requested
+        # 2. GENERATION CONFIG (Temp=0 + Thinking)
+        # Gemini 3 Pro defaults to "High" thinking, but we set temp=0 as requested.
+        generation_config = genai.types.GenerationConfig(
+            temperature=0.3, # Deterministic output
+            candidate_count=1
+        )
+
         model = genai.GenerativeModel(
             "gemini-3-pro-preview", 
-            safety_settings=safety_settings
+            safety_settings=safety_settings,
+            generation_config=generation_config
         ) 
         
+        # Standard File Upload Logic...
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_obj.getvalue())
             tmp_path = tmp.name
