@@ -70,9 +70,97 @@ def init_gemini(api_key, file_obj):
 # DEFAULT PROMPTS
 # ==========================================
 # We define these outside the steps so "Auto Mode" can see them too
-default_p1 = "Create a detailed marketing brochure based on this document."
-default_p2 = "Generate 5 multiple-choice quiz questions based on the brochure you just wrote."
-default_p3 = "Compile the brochure and questions into a nicely formatted HTML report."
+default_p1 = "Read the entire PDF brochure thoroughly, page by page, without skipping any content.
+
+Extract all information exactly as presented, including but not limited to:
+
+• All statements, claims, promises, and assertions
+• All factual data, numbers, percentages, measurements, and comparisons
+• All descriptions of products, services, processes, and methodologies
+• All benefits, advantages, differentiators, and selling points
+• All assumptions, conditions, limitations, exclusions, and disclaimers
+• All testimonials, quotes, endorsements, or implied guarantees
+• All timelines, dates, milestones, and projections
+• All references to standards, certifications, partners, or authorities
+
+Do not summarize, paraphrase, soften, or improve wording.
+Preserve original language verbatim wherever possible.
+
+Organize the output strictly by page number and section heading, so each extracted item can be traced back to its source.
+
+Convert tables, charts, footnotes, captions, and callouts into text while preserving structure.
+
+If a statement is vague, ambiguous, or unsupported, mark it clearly as such without interpretation.
+
+If claims appear absolute, comparative, or superlative, label them explicitly.
+
+Do not add analysis, opinions, or conclusions.
+
+The goal is a complete, auditable raw information dump suitable for later rebuttal and cross examination.
+
+"
+default_p2 = "From the provided brochure text, generate customer facing questions suitable for rebuttal, retention, and grievance handling.
+
+Internally ensure the questions cover ALL of the following categories (do not label categories in output):
+	1.	General understanding and informative questions
+• overall plan purpose
+• who the plan is for
+• how the plan helps in the long term
+	2.	Customer doubts and confusion after purchase
+• misunderstanding of benefits
+• expectations versus reality
+	3.	Policy status and continuation scenarios
+• lapsed, paid up, discontinued situations
+• impact of stopping premiums
+	4.	Regret, sunk cost, and continuation dilemma
+• customer has already paid for some time
+• what is lost if the policy is stopped now
+• whether continuing still makes sense
+	5.	Dissatisfaction and trust concerns
+• miss selling perception
+• unhappiness or loss of confidence
+
+STRICTLY EXCLUDE:
+• illustration based or example based questions
+• questions containing specific numbers, percentages, ages, amounts, or years
+• feature by feature, option listing, rider, or fund mechanics questions
+• operational or administrative queries
+
+Write questions in simple, natural, first person language used by Indian policyholders.
+
+Write questions as if spoken by a non technical Indian customer in a real call or complaint.
+
+Prefer short, direct sentences over complex ones.
+
+Generate multiple simple variations when the same concern can be expressed differently, as long as the meaning is not identical.
+
+Do NOT answer the questions.
+
+Output only a clean list of questions.
+
+
+"
+default_p3 = "Using only the brochure content provided, answer each question below.
+
+Follow these rules strictly:
+
+• Repeat the question exactly as written, including the *  at the beginning and  * at the end
+• Write the answer immediately below the question
+• Write as if you are speaking directly to the customer, not referring to documents
+• Never mention the brochure, policy document, or terms text explicitly
+• Use simple, non technical, customer friendly language
+• Respond as a customer support and retention executive
+• Always start by reassuring and explaining why the plan still has value
+• Convince the customer calmly before offering any next steps
+• You may mention customer support or helpline only as optional assistance, not as an exit
+• Never ask the customer to complain, escalate, or raise a grievance
+• Do not use legal or compliance heavy phrases
+• Do not introduce information not present in the brochure
+• Keep answers short, clear, and benefit focused
+
+If a question cannot be fully answered using the brochure alone, provide reassurance first, then gently suggest reaching customer support for personalised help.
+
+"
 
 # ==========================================
 #  MODE 1: AUTOMATIC (DEBUG OFF)
