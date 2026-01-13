@@ -42,9 +42,21 @@ def init_gemini(api_key, file_obj):
     try:
         genai.configure(api_key=api_key)
         
-        # FIX: Using a stable model ID. 
-        # If you have access to Gemini 3, use "gemini-3-pro-preview"
-        model = genai.GenerativeModel("gemini-3-pro-preview") 
+        # --- SAFETY SETTINGS (CRITICAL FIX) ---
+        # This prevents the ValueError by disabling the harassment/harm block 
+        # that gets triggered by words like "rebuttal" or "grievance".
+        safety_settings = [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+        ]
+
+        # Use the specific preview model ID as requested
+        model = genai.GenerativeModel(
+            "gemini-3-pro-preview", 
+            safety_settings=safety_settings
+        ) 
         
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_obj.getvalue())
@@ -69,8 +81,7 @@ def init_gemini(api_key, file_obj):
 # ==========================================
 # DEFAULT PROMPTS
 # ==========================================
-# We define these outside the steps so "Auto Mode" can see them too
-default_p1 = """  Read the entire PDF brochure thoroughly, page by page, without skipping any content.
+default_p1 = """Read the entire PDF brochure thoroughly, page by page, without skipping any content.
 
 Extract all information exactly as presented, including but not limited to:
 
@@ -96,9 +107,8 @@ If claims appear absolute, comparative, or superlative, label them explicitly.
 
 Do not add analysis, opinions, or conclusions.
 
-The goal is a complete, auditable raw information dump suitable for later rebuttal and cross examination.
+The goal is a complete, auditable raw information dump suitable for later rebuttal and cross examination."""
 
-"""
 default_p2 = """From the provided brochure text, generate customer facing questions suitable for rebuttal, retention, and grievance handling.
 
 Internally ensure the questions cover ALL of the following categories (do not label categories in output):
@@ -136,15 +146,13 @@ Generate multiple simple variations when the same concern can be expressed diffe
 
 Do NOT answer the questions.
 
-Output only a clean list of questions.
+Output only a clean list of questions."""
 
-
-"""
-default_p3 = """ Using only the brochure content provided, answer each question below.
+default_p3 = """Using only the brochure content provided, answer each question below.
 
 Follow these rules strictly:
 
-• Repeat the question exactly as written, including the *  at the beginning and  * at the end
+• Repeat the question exactly as written, including the *  at the beginning and  * at the end
 • Write the answer immediately below the question
 • Write as if you are speaking directly to the customer, not referring to documents
 • Never mention the brochure, policy document, or terms text explicitly
@@ -158,9 +166,7 @@ Follow these rules strictly:
 • Do not introduce information not present in the brochure
 • Keep answers short, clear, and benefit focused
 
-If a question cannot be fully answered using the brochure alone, provide reassurance first, then gently suggest reaching customer support for personalised help.
-
-"""
+If a question cannot be fully answered using the brochure alone, provide reassurance first, then gently suggest reaching customer support for personalised help."""
 
 # ==========================================
 #  MODE 1: AUTOMATIC (DEBUG OFF)
