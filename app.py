@@ -70,7 +70,7 @@ def init_gemini(api_key, file_obj):
 # DEFAULT PROMPTS
 # ==========================================
 # We define these outside the steps so "Auto Mode" can see them too
-default_p1 = "Read the entire PDF brochure thoroughly, page by page, without skipping any content.
+default_p1 = """  Read the entire PDF brochure thoroughly, page by page, without skipping any content.
 
 Extract all information exactly as presented, including but not limited to:
 
@@ -98,8 +98,8 @@ Do not add analysis, opinions, or conclusions.
 
 The goal is a complete, auditable raw information dump suitable for later rebuttal and cross examination.
 
-"
-default_p2 = "From the provided brochure text, generate customer facing questions suitable for rebuttal, retention, and grievance handling.
+"""
+default_p2 = """From the provided brochure text, generate customer facing questions suitable for rebuttal, retention, and grievance handling.
 
 Internally ensure the questions cover ALL of the following categories (do not label categories in output):
 	1.	General understanding and informative questions
@@ -139,8 +139,8 @@ Do NOT answer the questions.
 Output only a clean list of questions.
 
 
-"
-default_p3 = "Using only the brochure content provided, answer each question below.
+"""
+default_p3 = """ Using only the brochure content provided, answer each question below.
 
 Follow these rules strictly:
 
@@ -160,7 +160,7 @@ Follow these rules strictly:
 
 If a question cannot be fully answered using the brochure alone, provide reassurance first, then gently suggest reaching customer support for personalised help.
 
-"
+"""
 
 # ==========================================
 #  MODE 1: AUTOMATIC (DEBUG OFF)
