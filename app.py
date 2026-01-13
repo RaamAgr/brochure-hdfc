@@ -35,8 +35,7 @@ def init_gemini(api_key, file_obj):
     try:
         genai.configure(api_key=api_key)
         # Use "gemini-1.5-pro" or "gemini-2.0-flash-exp" / "gemini-3-pro-preview" if available
-        model = genai.GenerativeModel("gemini-3-pro") 
-        
+        model = genai.GenerativeModel("gemini-3-pro-preview")        
         # 1. Save uploaded file temporarily to disk
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_obj.getvalue())
