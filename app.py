@@ -172,7 +172,19 @@ Follow these rules strictly:
 • Do not introduce information not present in the brochure
 • Keep answers short, clear, and benefit focused
 
-If a question cannot be fully answered using the brochure alone, provide reassurance first, then gently suggest reaching customer support for personalised help."""
+If a question cannot be fully answered using the brochure alone, provide reassurance first, then gently suggest reaching customer support for personalised help.
+
+
+ FORMATTING RULES:
+        - DEFAULT FORMAT (Q&A):
+           Q: {{Question/Heading}}
+           A: {{answer}}
+           Separator: '###'
+
+
+"""
+
+
 
 # ==========================================
 #  MODE 1: AUTOMATIC (DEBUG OFF)
