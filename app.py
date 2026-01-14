@@ -200,7 +200,10 @@ if not debug_mode:
                     
                     # STEP 1
                     st.write("📝 Generating Brochure...")
-                    response1 = st.session_state.chat_session.send_message(default_p1)
+                    response1 = st.session_state.chat_session.send_message(
+                    default_p1, 
+                      request_options={"timeout": 600}
+                    )
                     st.session_state.step1_result = response1.text
                     
                     # STEP 2
@@ -255,7 +258,9 @@ else:
             
             if st.session_state.chat_session:
                 with st.spinner("Generating..."):
-                    response = st.session_state.chat_session.send_message(prompt1)
+                    response = st.session_state.chat_session.send_message(
+                        prompt1, 
+                        request_options={"timeout": 600}
                     st.session_state.step1_result = response.text
     
     if st.session_state.step1_result:
