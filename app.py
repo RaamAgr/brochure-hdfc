@@ -261,6 +261,7 @@ else:
                     response = st.session_state.chat_session.send_message(
                         prompt1, 
                         request_options={"timeout": 600}
+                    )
                     st.session_state.step1_result = response.text
     
     if st.session_state.step1_result:
